@@ -22,7 +22,7 @@ type RegisterRequest struct {
 	Phone    string `json:"phone"`
 	FullName string `json:"full_name" binding:"required"`
 	Password string `json:"password" binding:"required,min=8"`
-	Role     string `json:"role" binding:"required,oneof=owner runner admin shop"`
+	Role     string `json:"role" binding:"required,oneof=owner runner admin shop support_agent"`
 }
 
 // LoginRequest represents a login request.
@@ -274,8 +274,8 @@ func (s *AuthService) UpdateProfile(ctx context.Context, userID uuid.UUID, req U
 
 // UserStatsDTO holds user statistics for the admin dashboard.
 type UserStatsDTO struct {
-	TotalUsers  int64            `json:"total_users"`
-	ByRole      map[string]int64 `json:"by_role"`
+	TotalUsers int64            `json:"total_users"`
+	ByRole     map[string]int64 `json:"by_role"`
 }
 
 // ListUsers returns a paginated list of all users.

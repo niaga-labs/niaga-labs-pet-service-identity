@@ -14,6 +14,7 @@ import (
 	"github.com/Kilat-Pet-Delivery/lib-common/health"
 	"github.com/Kilat-Pet-Delivery/lib-common/logger"
 	"github.com/Kilat-Pet-Delivery/lib-common/middleware"
+	"github.com/Kilat-Pet-Delivery/lib-common/storage"
 	"github.com/Kilat-Pet-Delivery/service-identity/internal/application"
 	svcconfig "github.com/Kilat-Pet-Delivery/service-identity/internal/config"
 	"github.com/Kilat-Pet-Delivery/service-identity/internal/handler"
@@ -57,7 +58,7 @@ func main() {
 		// conventional unique-constraint name (uni_runner_applications_ic_number)
 		// which doesn't match the SQL migration's name (runner_applications_ic_number_key).
 		// SQL migrations own this table.
-		if err := db.AutoMigrate(&repository.UserModel{}, &repository.RefreshTokenModel{}, &repository.PasswordResetModel{}, &repository.ReferralModel{}, &repository.UserReferralCodeModel{}); err != nil {
+		if err := db.AutoMigrate(&repository.UserModel{}, &repository.RefreshTokenModel{}, &repository.PasswordResetModel{}, &repository.ReferralModel{}, &repository.UserReferralCodeModel{}, &repository.UserSettingsModel{}, &repository.UserDocumentModel{}); err != nil {
 			zapLogger.Fatal("failed to auto-migrate", zap.Error(err))
 		}
 		zapLogger.Info("database migration completed (dev auto-migrate)")
@@ -93,10 +94,18 @@ func main() {
 	userRepo := repository.NewGormUserRepository(db)
 	tokenRepo := repository.NewGormTokenRepository(db)
 	passwordResetRepo := repository.NewGormPasswordResetRepository(db)
+	settingsRepo := repository.NewGormSettingsRepository(db)
+	documentRepo := repository.NewGormDocumentRepository(db)
+	objectStorage, err := storage.NewMinIOStorageFromEnv()
+	if err != nil {
+		zapLogger.Fatal("failed to initialize object storage", zap.Error(err))
+	}
 
 	// 7. Create auth service
 	notifier := application.NewLogOnlyPasswordResetNotifier(zapLogger)
 	authService := application.NewAuthService(userRepo, tokenRepo, passwordResetRepo, notifier, jwtManager, zapLogger)
+	profileService := application.NewProfileService(userRepo, settingsRepo, objectStorage, zapLogger)
+	documentService := application.NewDocumentService(documentRepo, objectStorage, zapLogger)
 
 	// 8. Create Gin router with global middleware
 	gin.SetMode(gin.ReleaseMode)
@@ -124,6 +133,18 @@ func main() {
 	authHandler := handler.NewAuthHandler(authService, zapLogger)
 	authHandler.RegisterRoutes(apiV1, jwtManager)
 	referralHandler.RegisterRoutes(&router.RouterGroup, jwtManager)
+
+	profileHandler := handler.NewProfileHandler(profileService, zapLogger)
+	profileHandler.RegisterRoutes(apiV1, jwtManager)
+
+	settingsHandler := handler.NewSettingsHandler(profileService, zapLogger)
+	settingsHandler.RegisterRoutes(apiV1, jwtManager)
+
+	documentsHandler := handler.NewDocumentsHandler(documentService, zapLogger)
+	documentsHandler.RegisterRoutes(apiV1, jwtManager)
+
+	agentsHandler := handler.NewAgentsHandler(profileService, zapLogger)
+	agentsHandler.RegisterRoutes(apiV1)
 
 	forgotPasswordHandler := handler.NewForgotPasswordHandler(authService, zapLogger)
 	forgotPasswordHandler.RegisterRoutes(apiV1)

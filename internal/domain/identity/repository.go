@@ -3,6 +3,7 @@ package identity
 import (
 	"context"
 
+	"github.com/Kilat-Pet-Delivery/lib-common/auth"
 	"github.com/google/uuid"
 )
 
@@ -13,6 +14,7 @@ type UserRepository interface {
 	Save(ctx context.Context, user *User) error
 	Update(ctx context.Context, user *User) error
 	ListAll(ctx context.Context, page, limit int) ([]*User, int64, error)
+	ListByRole(ctx context.Context, role auth.UserRole, limit int) ([]*User, error)
 	CountByRole(ctx context.Context) (map[string]int64, error)
 	UpdatePasswordHash(ctx context.Context, userID uuid.UUID, passwordHash string) error
 }

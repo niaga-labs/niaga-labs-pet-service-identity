@@ -14,17 +14,17 @@ import (
 
 // UserModel is the GORM model for the users table.
 type UserModel struct {
-	ID           uuid.UUID     `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
-	Email        string        `gorm:"type:varchar(255);uniqueIndex;not null"`
-	Phone        string        `gorm:"type:varchar(20)"`
-	PasswordHash string        `gorm:"type:varchar(255);not null"`
-	FullName     string        `gorm:"type:varchar(255);not null"`
-	Role         auth.UserRole `gorm:"type:varchar(20);not null"`
-	IsVerified   bool          `gorm:"default:false"`
-	AvatarURL    string        `gorm:"type:text"`
-	Version      int64         `gorm:"not null;default:1"`
-	CreatedAt    time.Time     `gorm:"not null;default:now()"`
-	UpdatedAt    time.Time     `gorm:"not null;default:now()"`
+	ID              uuid.UUID     `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
+	Email           string        `gorm:"type:varchar(255);uniqueIndex;not null"`
+	Phone           string        `gorm:"type:varchar(20)"`
+	PasswordHash    string        `gorm:"type:varchar(255);not null"`
+	FullName        string        `gorm:"type:varchar(255);not null"`
+	Role            auth.UserRole `gorm:"type:varchar(20);not null"`
+	IsVerified      bool          `gorm:"default:false"`
+	ProfilePhotoURL string        `gorm:"column:profile_photo_url;type:text"`
+	Version         int64         `gorm:"not null;default:1"`
+	CreatedAt       time.Time     `gorm:"not null;default:now()"`
+	UpdatedAt       time.Time     `gorm:"not null;default:now()"`
 }
 
 // TableName specifies the table name for GORM.
@@ -42,7 +42,7 @@ func (m *UserModel) toDomain() *identity.User {
 		m.FullName,
 		m.Role,
 		m.IsVerified,
-		m.AvatarURL,
+		m.ProfilePhotoURL,
 		m.Version,
 		m.CreatedAt,
 		m.UpdatedAt,
@@ -52,17 +52,17 @@ func (m *UserModel) toDomain() *identity.User {
 // fromDomainUser converts a domain User to a UserModel.
 func fromDomainUser(u *identity.User) *UserModel {
 	return &UserModel{
-		ID:           u.ID(),
-		Email:        u.Email(),
-		Phone:        u.Phone(),
-		PasswordHash: u.PasswordHash(),
-		FullName:     u.FullName(),
-		Role:         u.Role(),
-		IsVerified:   u.IsVerified(),
-		AvatarURL:    u.AvatarURL(),
-		Version:      u.Version(),
-		CreatedAt:    u.CreatedAt(),
-		UpdatedAt:    u.UpdatedAt(),
+		ID:              u.ID(),
+		Email:           u.Email(),
+		Phone:           u.Phone(),
+		PasswordHash:    u.PasswordHash(),
+		FullName:        u.FullName(),
+		Role:            u.Role(),
+		IsVerified:      u.IsVerified(),
+		ProfilePhotoURL: u.AvatarURL(),
+		Version:         u.Version(),
+		CreatedAt:       u.CreatedAt(),
+		UpdatedAt:       u.UpdatedAt(),
 	}
 }
 
@@ -139,6 +139,28 @@ func (r *GormUserRepository) ListAll(ctx context.Context, page, limit int) ([]*i
 		users[i] = models[i].toDomain()
 	}
 	return users, total, nil
+}
+
+// ListByRole returns active users matching the supplied role.
+func (r *GormUserRepository) ListByRole(ctx context.Context, role auth.UserRole, limit int) ([]*identity.User, error) {
+	if limit < 1 || limit > 100 {
+		limit = 50
+	}
+
+	var models []UserModel
+	if err := r.db.WithContext(ctx).
+		Where("role = ? AND is_verified = ?", role, true).
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	users := make([]*identity.User, len(models))
+	for i := range models {
+		users[i] = models[i].toDomain()
+	}
+	return users, nil
 }
 
 // UpdatePasswordHash directly updates a user's password hash by ID.
