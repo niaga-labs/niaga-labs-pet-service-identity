@@ -32,6 +32,19 @@ func (UserModel) TableName() string {
 	return "users"
 }
 
+// UserRoleModel is a scoped role assignment. Global roles continue to live on
+// users.role for backward compatibility; shop roles live here.
+type UserRoleModel struct {
+	UserID    uuid.UUID     `gorm:"type:uuid;primaryKey"`
+	Role      auth.UserRole `gorm:"type:varchar(30);primaryKey"`
+	ScopeType string        `gorm:"type:varchar(20);primaryKey"`
+	ScopeID   uuid.UUID     `gorm:"type:uuid;primaryKey"`
+	CreatedAt time.Time     `gorm:"not null;default:now()"`
+}
+
+// TableName specifies the table name for scoped roles.
+func (UserRoleModel) TableName() string { return "user_roles" }
+
 // toDomain converts a UserModel to a domain User.
 func (m *UserModel) toDomain() *identity.User {
 	return identity.ReconstructUser(
@@ -178,4 +191,47 @@ func (r *GormUserRepository) CountByRole(ctx context.Context) (map[string]int64,
 		counts[rc.Role] = rc.Count
 	}
 	return counts, nil
+}
+
+// GrantRole grants a scoped role idempotently.
+func (r *GormUserRepository) GrantRole(ctx context.Context, userID uuid.UUID, role auth.UserRole, scopeType string, scopeID *uuid.UUID) error {
+	id := uuid.Nil
+	if scopeID != nil {
+		id = *scopeID
+	}
+	row := UserRoleModel{
+		UserID:    userID,
+		Role:      role,
+		ScopeType: scopeType,
+		ScopeID:   id,
+		CreatedAt: time.Now().UTC(),
+	}
+	return r.db.WithContext(ctx).FirstOrCreate(&row, UserRoleModel{
+		UserID:    userID,
+		Role:      role,
+		ScopeType: scopeType,
+		ScopeID:   id,
+	}).Error
+}
+
+// RevokeRole removes a scoped role idempotently.
+func (r *GormUserRepository) RevokeRole(ctx context.Context, userID uuid.UUID, role auth.UserRole, scopeType string, scopeID *uuid.UUID) error {
+	id := uuid.Nil
+	if scopeID != nil {
+		id = *scopeID
+	}
+	return r.db.WithContext(ctx).Where("user_id = ? AND role = ? AND scope_type = ? AND scope_id = ?", userID, role, scopeType, id).Delete(&UserRoleModel{}).Error
+}
+
+// ListShopsForUser returns all shop-scoped roles for a user.
+func (r *GormUserRepository) ListShopsForUser(ctx context.Context, userID uuid.UUID) ([]identity.ShopRole, error) {
+	var rows []UserRoleModel
+	if err := r.db.WithContext(ctx).Where("user_id = ? AND scope_type = ?", userID, "shop").Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	out := make([]identity.ShopRole, len(rows))
+	for i, row := range rows {
+		out[i] = identity.ShopRole{ShopID: row.ScopeID, Role: row.Role}
+	}
+	return out, nil
 }

@@ -38,6 +38,12 @@ type AuthResponse struct {
 	User         dto.UserDTO `json:"user"`
 }
 
+// ShopRoleDTO is a user's role within one shop.
+type ShopRoleDTO struct {
+	ShopID uuid.UUID `json:"shop_id"`
+	Role   string    `json:"role"`
+}
+
 // UpdateProfileRequest represents a profile update request.
 type UpdateProfileRequest struct {
 	FullName  string `json:"full_name"`
@@ -249,6 +255,37 @@ func (s *AuthService) GetProfile(ctx context.Context, userID uuid.UUID) (*dto.Us
 	return &result, nil
 }
 
+// GrantShopRole grants a shop-scoped role to a user.
+func (s *AuthService) GrantShopRole(ctx context.Context, userID, shopID uuid.UUID, role string) error {
+	shopRole := auth.UserRole(role)
+	if !isShopRole(shopRole) {
+		return domain.NewValidationError("role must be shop_owner, shop_manager, or shop_staff")
+	}
+	return s.userRepo.GrantRole(ctx, userID, shopRole, "shop", &shopID)
+}
+
+// RevokeShopRole removes a shop-scoped role from a user.
+func (s *AuthService) RevokeShopRole(ctx context.Context, userID, shopID uuid.UUID, role string) error {
+	shopRole := auth.UserRole(role)
+	if !isShopRole(shopRole) {
+		return domain.NewValidationError("role must be shop_owner, shop_manager, or shop_staff")
+	}
+	return s.userRepo.RevokeRole(ctx, userID, shopRole, "shop", &shopID)
+}
+
+// GetMyShops returns all shops where the user has a scoped merchant role.
+func (s *AuthService) GetMyShops(ctx context.Context, userID uuid.UUID) ([]ShopRoleDTO, error) {
+	roles, err := s.userRepo.ListShopsForUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]ShopRoleDTO, len(roles))
+	for i, role := range roles {
+		out[i] = ShopRoleDTO{ShopID: role.ShopID, Role: string(role.Role)}
+	}
+	return out, nil
+}
+
 // UpdateProfile updates the user's profile information.
 func (s *AuthService) UpdateProfile(ctx context.Context, userID uuid.UUID, req UpdateProfileRequest) (*dto.UserDTO, error) {
 	user, err := s.userRepo.FindByID(ctx, userID)
@@ -274,8 +311,8 @@ func (s *AuthService) UpdateProfile(ctx context.Context, userID uuid.UUID, req U
 
 // UserStatsDTO holds user statistics for the admin dashboard.
 type UserStatsDTO struct {
-	TotalUsers  int64            `json:"total_users"`
-	ByRole      map[string]int64 `json:"by_role"`
+	TotalUsers int64            `json:"total_users"`
+	ByRole     map[string]int64 `json:"by_role"`
 }
 
 // ListUsers returns a paginated list of all users.
@@ -419,5 +456,14 @@ func toUserDTO(user *identity.User) dto.UserDTO {
 		IsVerified: user.IsVerified(),
 		AvatarURL:  user.AvatarURL(),
 		CreatedAt:  user.CreatedAt(),
+	}
+}
+
+func isShopRole(role auth.UserRole) bool {
+	switch role {
+	case auth.UserRole("shop_owner"), auth.UserRole("shop_manager"), auth.UserRole("shop_staff"):
+		return true
+	default:
+		return false
 	}
 }

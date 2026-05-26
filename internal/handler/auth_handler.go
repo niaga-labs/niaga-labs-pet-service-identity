@@ -25,6 +25,7 @@ func NewAuthHandler(service *application.AuthService, logger *zap.Logger) *AuthH
 
 // RegisterRoutes registers all authentication routes on the given router group.
 func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup, jwtManager *auth.JWTManager) {
+	authMW := middleware.AuthMiddleware(jwtManager)
 	authGroup := r.Group("/auth")
 	{
 		// Public routes (no authentication required)
@@ -34,12 +35,18 @@ func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup, jwtManager *auth.JWTMan
 
 		// Protected routes (authentication required)
 		protected := authGroup.Group("")
-		protected.Use(middleware.AuthMiddleware(jwtManager))
+		protected.Use(authMW)
 		{
 			protected.POST("/logout", h.Logout)
 			protected.GET("/profile", h.GetProfile)
 			protected.PUT("/profile", h.UpdateProfile)
+			protected.GET("/shops/me", h.GetMyShops)
 		}
+	}
+	identityGroup := r.Group("/identity")
+	identityGroup.Use(authMW)
+	{
+		identityGroup.GET("/shops/me", h.GetMyShops)
 	}
 }
 
@@ -131,6 +138,22 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
+	response.Success(c, result)
+}
+
+// GetMyShops lists shop-scoped roles for the authenticated user.
+func (h *AuthHandler) GetMyShops(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		response.BadRequest(c, "user ID not found in context")
+		return
+	}
+	result, err := h.service.GetMyShops(c.Request.Context(), userID)
+	if err != nil {
+		h.logger.Error("get my shops failed", zap.Error(err))
+		response.Error(c, err)
+		return
+	}
 	response.Success(c, result)
 }
 

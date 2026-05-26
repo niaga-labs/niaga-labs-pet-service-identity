@@ -3,8 +3,15 @@ package identity
 import (
 	"context"
 
+	"github.com/Kilat-Pet-Delivery/lib-common/auth"
 	"github.com/google/uuid"
 )
+
+// ShopRole is one scoped merchant role assignment.
+type ShopRole struct {
+	ShopID uuid.UUID     `json:"shop_id"`
+	Role   auth.UserRole `json:"role"`
+}
 
 // UserRepository defines persistence operations for User aggregates.
 type UserRepository interface {
@@ -15,6 +22,9 @@ type UserRepository interface {
 	ListAll(ctx context.Context, page, limit int) ([]*User, int64, error)
 	CountByRole(ctx context.Context) (map[string]int64, error)
 	UpdatePasswordHash(ctx context.Context, userID uuid.UUID, passwordHash string) error
+	GrantRole(ctx context.Context, userID uuid.UUID, role auth.UserRole, scopeType string, scopeID *uuid.UUID) error
+	RevokeRole(ctx context.Context, userID uuid.UUID, role auth.UserRole, scopeType string, scopeID *uuid.UUID) error
+	ListShopsForUser(ctx context.Context, userID uuid.UUID) ([]ShopRole, error)
 }
 
 // TokenRepository defines persistence operations for RefreshToken entities.

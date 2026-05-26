@@ -12,10 +12,13 @@ import (
 	"github.com/Kilat-Pet-Delivery/lib-common/auth"
 	"github.com/Kilat-Pet-Delivery/lib-common/database"
 	"github.com/Kilat-Pet-Delivery/lib-common/health"
+	"github.com/Kilat-Pet-Delivery/lib-common/kafka"
 	"github.com/Kilat-Pet-Delivery/lib-common/logger"
 	"github.com/Kilat-Pet-Delivery/lib-common/middleware"
+	protoEvents "github.com/Kilat-Pet-Delivery/lib-proto/events"
 	"github.com/Kilat-Pet-Delivery/service-identity/internal/application"
 	svcconfig "github.com/Kilat-Pet-Delivery/service-identity/internal/config"
+	identityEvents "github.com/Kilat-Pet-Delivery/service-identity/internal/events"
 	"github.com/Kilat-Pet-Delivery/service-identity/internal/handler"
 	"github.com/Kilat-Pet-Delivery/service-identity/internal/repository"
 	"github.com/gin-gonic/gin"
@@ -57,7 +60,7 @@ func main() {
 		// conventional unique-constraint name (uni_runner_applications_ic_number)
 		// which doesn't match the SQL migration's name (runner_applications_ic_number_key).
 		// SQL migrations own this table.
-		if err := db.AutoMigrate(&repository.UserModel{}, &repository.RefreshTokenModel{}, &repository.PasswordResetModel{}, &repository.ReferralModel{}, &repository.UserReferralCodeModel{}); err != nil {
+		if err := db.AutoMigrate(&repository.UserModel{}, &repository.UserRoleModel{}, &repository.RefreshTokenModel{}, &repository.PasswordResetModel{}, &repository.ReferralModel{}, &repository.UserReferralCodeModel{}); err != nil {
 			zapLogger.Fatal("failed to auto-migrate", zap.Error(err))
 		}
 		zapLogger.Info("database migration completed (dev auto-migrate)")
@@ -97,6 +100,16 @@ func main() {
 	// 7. Create auth service
 	notifier := application.NewLogOnlyPasswordResetNotifier(zapLogger)
 	authService := application.NewAuthService(userRepo, tokenRepo, passwordResetRepo, notifier, jwtManager, zapLogger)
+	consumerCtx, cancelConsumers := context.WithCancel(context.Background())
+	defer cancelConsumers()
+	shopKafkaConsumer := kafka.NewConsumer(cfg.KafkaConfig.Brokers, cfg.KafkaConfig.GroupPrefix+"identity-shop-roles", protoEvents.TopicShopEvents, zapLogger)
+	defer func() { _ = shopKafkaConsumer.Close() }()
+	shopConsumer := identityEvents.NewShopEventConsumer(authService, zapLogger)
+	go func() {
+		if err := shopKafkaConsumer.Consume(consumerCtx, shopConsumer.HandleKafkaMessage); err != nil && consumerCtx.Err() == nil {
+			zapLogger.Error("shop event consumer stopped", zap.Error(err))
+		}
+	}()
 
 	// 8. Create Gin router with global middleware
 	gin.SetMode(gin.ReleaseMode)
@@ -161,6 +174,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	zapLogger.Info("shutting down server...")
+	cancelConsumers()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
