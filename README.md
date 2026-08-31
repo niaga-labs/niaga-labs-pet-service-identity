@@ -56,12 +56,25 @@ SERVICE_PORT=8004
 # Install dependencies
 go mod download
 
-# Run migrations
-go run cmd/migrate/main.go
+# Point at the shared dev-infra stack (cd ~/Documents/dev-infra; ./dev.ps1 up kilat)
+export DB_HOST=localhost DB_PORT=5432 DB_USER=kilat DB_PASSWORD=kilat_secret
+export DB_NAME=kilat_identity DB_SSL_MODE=disable
+
+# Apply the SQL migrations -- run from the repository root, the migration
+# source is resolved relative to the working directory
+go run ./cmd/migrate
 
 # Start the service
-go run cmd/server/main.go
+go run ./cmd/server
 ```
+
+### Two migration modes
+
+`cmd/migrate` always applies the golang-migrate files in `migrations/` and is the
+source of truth for the schema. The server additionally auto-migrates a subset of
+the GORM models when `APP_ENV=development`; `RunnerApplicationModel` is deliberately left
+out of that list, because GORM renames the unique constraint on `runner_applications`
+away from the name the SQL migration gives it. Prefer `cmd/migrate`.
 
 The service will start on port 8004.
 
