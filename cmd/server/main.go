@@ -53,11 +53,18 @@ func main() {
 
 	// 4. Run database migrations
 	if cfg.AppEnv == "development" {
-		// RunnerApplicationModel is intentionally omitted: GORM's migrator drops its
-		// conventional unique-constraint name (uni_runner_applications_ic_number)
-		// which doesn't match the SQL migration's name (runner_applications_ic_number_key).
-		// SQL migrations own this table.
-		if err := db.AutoMigrate(&repository.UserModel{}, &repository.RefreshTokenModel{}, &repository.PasswordResetModel{}, &repository.ReferralModel{}, &repository.UserReferralCodeModel{}); err != nil {
+		// RunnerApplicationModel, ReferralModel and UserReferralCodeModel are
+		// intentionally omitted -- the SQL migrations own those tables.
+		//
+		// For runner_applications the reason is constraint naming: GORM's migrator
+		// uses uni_runner_applications_ic_number, the SQL migration uses
+		// runner_applications_ic_number_key.
+		//
+		// For referrals and user_referral_codes the reason is KPD-56: they used to
+		// exist ONLY on this branch, so they were missing everywhere that runs the
+		// SQL migrations instead. 005_create_referrals now creates them, and leaving
+		// them out here keeps dev and every other environment on the same schema.
+		if err := db.AutoMigrate(&repository.UserModel{}, &repository.RefreshTokenModel{}, &repository.PasswordResetModel{}); err != nil {
 			zapLogger.Fatal("failed to auto-migrate", zap.Error(err))
 		}
 		zapLogger.Info("database migration completed (dev auto-migrate)")
