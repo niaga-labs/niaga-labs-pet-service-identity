@@ -9,19 +9,19 @@ import (
 // RunnerApplication represents a runner's application to join the Kilat platform.
 // Fields are private; access via getters only.
 type RunnerApplication struct {
-	id                     uuid.UUID
-	name                   string
-	phone                  string
-	icNumber               string
-	vehicleType            string
-	plateNumber            string
-	petExperience          []string
+	id                      uuid.UUID
+	name                    string
+	phone                   string
+	icNumber                string
+	vehicleType             string
+	plateNumber             string
+	petExperience           []string
 	comfortableWithLivePets bool
-	consentAcknowledged    bool
-	status                 string
-	submittedAt            time.Time
-	reviewedAt             *time.Time
-	reviewerUserID         *uuid.UUID
+	consentAcknowledged     bool
+	status                  string
+	submittedAt             time.Time
+	reviewedAt              *time.Time
+	reviewerUserID          *uuid.UUID
 }
 
 // NewRunnerApplication creates a new RunnerApplication with status pending_review.
@@ -31,19 +31,19 @@ func NewRunnerApplication(
 	comfortableWithLivePets, consentAcknowledged bool,
 ) *RunnerApplication {
 	return &RunnerApplication{
-		id:                     uuid.New(),
-		name:                   name,
-		phone:                  phone,
-		icNumber:               icNumber,
-		vehicleType:            vehicleType,
-		plateNumber:            plateNumber,
-		petExperience:          petExperience,
+		id:                      uuid.New(),
+		name:                    name,
+		phone:                   phone,
+		icNumber:                icNumber,
+		vehicleType:             vehicleType,
+		plateNumber:             plateNumber,
+		petExperience:           petExperience,
 		comfortableWithLivePets: comfortableWithLivePets,
-		consentAcknowledged:    consentAcknowledged,
-		status:                 "pending_review",
-		submittedAt:            time.Now().UTC(),
-		reviewedAt:             nil,
-		reviewerUserID:         nil,
+		consentAcknowledged:     consentAcknowledged,
+		status:                  "pending_review",
+		submittedAt:             time.Now().UTC(),
+		reviewedAt:              nil,
+		reviewerUserID:          nil,
 	}
 }
 
