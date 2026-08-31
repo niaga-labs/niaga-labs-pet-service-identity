@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - README: the "Running the Service" section now gives the exact environment for
   the shared dev-infra stack and explains which schema each migration mode owns. (KPD-2)
-- `cmd/server`: dropped `ReferralModel` and `UserReferralCodeModel` from the
-  development `AutoMigrate` list -- the SQL migrations own those tables now, so
-  development and every other environment share one schema. (KPD-56)
+- `cmd/server`: the development-only GORM `AutoMigrate` branch is gone entirely.
+  Every model in this service now has a SQL migration, so the migrations own the
+  schema in all environments and development still gets it automatically at
+  startup -- one path, nothing left to drift. (KPD-56)
