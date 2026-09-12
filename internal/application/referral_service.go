@@ -14,8 +14,8 @@ const defaultRewardCents = 500 // RM 5.00 reward per referral
 
 // ReferralStatsDTO is the API response for referral statistics.
 type ReferralStatsDTO struct {
-	ReferralCode   string        `json:"referral_code"`
-	TotalReferrals int64         `json:"total_referrals"`
+	ReferralCode   string         `json:"referral_code"`
+	TotalReferrals int64          `json:"total_referrals"`
 	Referrals      []*ReferralDTO `json:"referrals"`
 }
 
