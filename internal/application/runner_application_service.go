@@ -3,9 +3,9 @@ package application
 import (
 	"context"
 
-	"github.com/Kilat-Pet-Delivery/lib-common/domain"
-	"github.com/Kilat-Pet-Delivery/lib-proto/dto"
-	"github.com/Kilat-Pet-Delivery/service-identity/internal/domain/identity"
+	"github.com/niaga-labs/niaga-labs-pet-lib-common/domain"
+	"github.com/niaga-labs/niaga-labs-pet-lib-proto/dto"
+	"github.com/niaga-labs/niaga-labs-pet-service-identity/internal/domain/identity"
 	"go.uber.org/zap"
 )
 

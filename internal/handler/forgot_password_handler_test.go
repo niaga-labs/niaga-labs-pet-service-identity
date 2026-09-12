@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Kilat-Pet-Delivery/lib-proto/dto"
-	"github.com/Kilat-Pet-Delivery/service-identity/internal/handler"
 	"github.com/gin-gonic/gin"
+	"github.com/niaga-labs/niaga-labs-pet-lib-proto/dto"
+	"github.com/niaga-labs/niaga-labs-pet-service-identity/internal/handler"
 	"go.uber.org/zap"
 )
 

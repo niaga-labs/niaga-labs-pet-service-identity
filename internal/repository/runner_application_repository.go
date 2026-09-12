@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Kilat-Pet-Delivery/lib-common/domain"
-	"github.com/Kilat-Pet-Delivery/service-identity/internal/domain/identity"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"github.com/niaga-labs/niaga-labs-pet-lib-common/domain"
+	"github.com/niaga-labs/niaga-labs-pet-service-identity/internal/domain/identity"
 	"gorm.io/gorm"
 )
 

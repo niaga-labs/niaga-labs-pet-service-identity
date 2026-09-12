@@ -1,7 +1,7 @@
 # Kilat Pet Delivery - service-identity
 
 Authentication and users: registration, login, JWT issuance and refresh, password reset, runner applications and referrals. Every other service trusts the tokens this one signs.
-Jira project **KPD** - GitHub `Kilat-Pet-Delivery/service-identity` - stack **Go 1.24 - Gin - GORM - PostgreSQL**. Global rules live in `~/.claude/`;
+Jira project **KPD** - GitHub `niaga-labs/niaga-labs-pet-service-identity` - stack **Go 1.24 - Gin - GORM - PostgreSQL**. Global rules live in `~/.claude/`;
 this file only adds what is specific here.
 
 ## Orient here first
