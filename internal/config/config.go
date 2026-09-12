@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/Kilat-Pet-Delivery/lib-common/config"
+	"github.com/niaga-labs/niaga-labs-pet-lib-common/config"
 )
 
 // ServiceConfig holds all configuration for the identity service.

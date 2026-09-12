@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	referralDomain "github.com/Kilat-Pet-Delivery/service-identity/internal/domain/referral"
 	"github.com/google/uuid"
+	referralDomain "github.com/niaga-labs/niaga-labs-pet-service-identity/internal/domain/referral"
 	"gorm.io/gorm"
 )
 

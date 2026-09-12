@@ -13,13 +13,13 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/Kilat-Pet-Delivery/lib-common/domain"
-	"github.com/Kilat-Pet-Delivery/service-identity/internal/application"
-	"github.com/Kilat-Pet-Delivery/service-identity/internal/domain/identity"
-	"github.com/Kilat-Pet-Delivery/service-identity/internal/handler"
-	"github.com/Kilat-Pet-Delivery/service-identity/internal/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/niaga-labs/niaga-labs-pet-lib-common/domain"
+	"github.com/niaga-labs/niaga-labs-pet-service-identity/internal/application"
+	"github.com/niaga-labs/niaga-labs-pet-service-identity/internal/domain/identity"
+	"github.com/niaga-labs/niaga-labs-pet-service-identity/internal/handler"
+	"github.com/niaga-labs/niaga-labs-pet-service-identity/internal/repository"
 	"go.uber.org/zap"
 )
 

@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Kilat-Pet-Delivery/lib-common/auth"
-	"github.com/Kilat-Pet-Delivery/lib-common/domain"
-	"github.com/Kilat-Pet-Delivery/lib-proto/dto"
-	"github.com/Kilat-Pet-Delivery/service-identity/internal/domain/identity"
 	"github.com/google/uuid"
+	"github.com/niaga-labs/niaga-labs-pet-lib-common/auth"
+	"github.com/niaga-labs/niaga-labs-pet-lib-common/domain"
+	"github.com/niaga-labs/niaga-labs-pet-lib-proto/dto"
+	"github.com/niaga-labs/niaga-labs-pet-service-identity/internal/domain/identity"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )

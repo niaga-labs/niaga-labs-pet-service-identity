@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Kilat-Pet-Delivery/lib-common/domain"
-	"github.com/Kilat-Pet-Delivery/service-identity/internal/domain/identity"
-	"github.com/Kilat-Pet-Delivery/service-identity/internal/repository"
 	"github.com/google/uuid"
+	"github.com/niaga-labs/niaga-labs-pet-lib-common/domain"
+	"github.com/niaga-labs/niaga-labs-pet-service-identity/internal/domain/identity"
+	"github.com/niaga-labs/niaga-labs-pet-service-identity/internal/repository"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

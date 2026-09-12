@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Kilat-Pet-Delivery/lib-common/auth"
 	"github.com/google/uuid"
+	"github.com/niaga-labs/niaga-labs-pet-lib-common/auth"
 )
 
 // User is the aggregate root representing a system user.
