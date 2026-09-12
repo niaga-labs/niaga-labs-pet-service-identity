@@ -51,21 +51,18 @@ func main() {
 		zapLogger.Fatal("failed to connect to database", zap.Error(err))
 	}
 
-	// 4. Run database migrations
-	if cfg.AppEnv == "development" {
-		// RunnerApplicationModel is intentionally omitted: GORM's migrator drops its
-		// conventional unique-constraint name (uni_runner_applications_ic_number)
-		// which doesn't match the SQL migration's name (runner_applications_ic_number_key).
-		// SQL migrations own this table.
-		if err := db.AutoMigrate(&repository.UserModel{}, &repository.RefreshTokenModel{}, &repository.PasswordResetModel{}, &repository.ReferralModel{}, &repository.UserReferralCodeModel{}); err != nil {
-			zapLogger.Fatal("failed to auto-migrate", zap.Error(err))
-		}
-		zapLogger.Info("database migration completed (dev auto-migrate)")
-	} else {
-		dbURL := dbConfig.DatabaseURL()
-		if err := database.RunMigrations(dbURL, "migrations", zapLogger); err != nil {
-			zapLogger.Fatal("failed to run migrations", zap.Error(err))
-		}
+	// 4. Run database migrations.
+	//
+	// KPD-56: this used to AutoMigrate a subset of the models in development and
+	// run the SQL migrations everywhere else. referrals and user_referral_codes had
+	// no SQL migration, so they existed only in development. Now that
+	// 005_create_referrals covers them, every model in this service has a SQL
+	// migration -- so there is one path for all environments and the two can no
+	// longer drift apart. Development still gets its schema automatically, because
+	// the server applies the migrations at startup.
+	dbURL := dbConfig.DatabaseURL()
+	if err := database.RunMigrations(dbURL, "migrations", zapLogger); err != nil {
+		zapLogger.Fatal("failed to run migrations", zap.Error(err))
 	}
 
 	// 5. Initialize JWT manager with durations parsed from config
