@@ -274,8 +274,8 @@ func (s *AuthService) UpdateProfile(ctx context.Context, userID uuid.UUID, req U
 
 // UserStatsDTO holds user statistics for the admin dashboard.
 type UserStatsDTO struct {
-	TotalUsers  int64            `json:"total_users"`
-	ByRole      map[string]int64 `json:"by_role"`
+	TotalUsers int64            `json:"total_users"`
+	ByRole     map[string]int64 `json:"by_role"`
 }
 
 // ListUsers returns a paginated list of all users.
